@@ -1,0 +1,221 @@
+
+<div style="position: relative; width: 100%; height: 460px;">
+  <canvas id="tc"></canvas>
+</div>
+<div id="tempTableWrap" style="margin-top: 18px;"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const raw = [
+  ['2026-03-14 11:23',98.2],['2026-03-14 15:20',98.8],
+  ['2026-03-15 04:30',100.9],['2026-03-15 07:22',100.0],['2026-03-15 17:56',98.2],['2026-03-15 20:22',98.4],['2026-03-15 22:41',100.0],['2026-03-15 23:46',100.0],
+  ['2026-03-16 03:37',100.6],['2026-03-16 15:53',99.1],['2026-03-16 19:09',99.7],['2026-03-16 20:47',101.1],['2026-03-16 20:48',100.8],
+  ['2026-03-17 06:42',99.9],['2026-03-17 17:25',100.2],
+  ['2026-03-18 06:40',101.5],['2026-03-18 08:15',100.8],['2026-03-18 18:06',101.1],
+  ['2026-03-19 06:25',100.2],['2026-03-19 08:22',100.4],['2026-03-19 15:45',101.7],['2026-03-19 23:23',100.4],
+  ['2026-03-20 07:01',100.0],['2026-03-20 09:05',100.6],['2026-03-20 19:00',99.1],['2026-03-20 22:55',101.1],
+  ['2026-03-21 08:16',100.4],['2026-03-21 11:35',100.6],['2026-03-21 17:07',100.4],['2026-03-21 23:12',100.2],
+  ['2026-03-22 06:59',101.7],['2026-03-22 15:13',99.1],['2026-03-22 17:06',98.8],['2026-03-22 18:29',99.3],['2026-03-22 19:26',100.9],['2026-03-22 20:49',100.9],['2026-03-22 21:57',99.9],
+  ['2026-03-23 05:06',102.0],['2026-03-23 06:20',99.7],['2026-03-23 06:58',98.2],['2026-03-23 08:33',98.1],['2026-03-23 10:42',98.4],['2026-03-23 12:38',98.4],['2026-03-23 13:31',99.3],['2026-03-23 14:29',99.7],['2026-03-23 16:33',98.4],['2026-03-23 18:29',99.1],['2026-03-23 19:30',100.2],['2026-03-23 20:31',100.9],['2026-03-23 21:33',100.2],['2026-03-23 22:33',99.7],
+  ['2026-03-24 03:49',100.4],['2026-03-24 05:13',100.8],['2026-03-24 09:14',98.8],['2026-03-24 09:14',99.1],['2026-03-24 11:46',99.1],['2026-03-24 13:19',100.4],['2026-03-24 15:03',99.1],['2026-03-24 17:36',100.4],['2026-03-24 18:24',101.5],['2026-03-24 19:52',102.0],['2026-03-24 20:54',100.0],['2026-03-24 20:55',100.2],['2026-03-24 22:15',99.7],['2026-03-24 23:49',98.8],
+  ['2026-03-25 00:27',100.2],['2026-03-25 06:33',100.2],['2026-03-25 07:55',99.9],['2026-03-25 12:37',98.6],['2026-03-25 13:49',99.1],['2026-03-25 14:46',99.3],['2026-03-25 16:14',99.9],['2026-03-25 20:15',99.0],['2026-03-25 22:28',99.1],
+  ['2026-03-26 01:06',99.1],['2026-03-26 03:45',100.4],['2026-03-26 06:44',99.5],['2026-03-26 08:30',99.3],['2026-03-26 10:51',99.1],['2026-03-26 13:05',98.2],['2026-03-26 15:07',98.8],['2026-03-26 17:21',99.1],['2026-03-26 19:38',98.4],['2026-03-26 22:00',99.1],['2026-03-26 23:47',99.1],
+  ['2026-03-27 06:36',98.4]
+];
+
+const dk = matchMedia('(prefers-color-scheme:dark)').matches;
+const txtC = dk ? '#bbb' : '#555';
+const gridC = dk ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+const feverThreshold = 100.4;
+const feverColor = dk ? '#ff7b7b' : '#d64545';
+const normalColor = dk ? '#7fdd8a' : '#2f9e44';
+const dayBandLight = dk ? 'rgba(255,255,255,0.045)' : 'rgba(0,0,0,0.035)';
+const dayBandDark = dk ? 'rgba(255,255,255,0.11)' : 'rgba(0,0,0,0.085)';
+const dayLabelColor = dk ? 'rgba(228,228,228,0.76)' : 'rgba(86,86,86,0.58)';
+const tableBorderC = dk ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.14)';
+const tableHeadBg = dk ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+const tableRowAltBg = dk ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.025)';
+
+const dayMeta = [
+  {key:'2026-03-14',label:'Sat\n3/14',color:'#5f5f5f',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-15',label:'Sun\n3/15',color:'#6b6b6b',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-16',label:'Mon\n3/16',color:'#777777',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-17',label:'Tue\n3/17',color:'#838383',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-18',label:'Wed\n3/18',color:'#8f8f8f',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-19',label:'Thu\n3/19',color:'#9b9b9b',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-20',label:'Fri\n3/20',color:'#a7a7a7',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-21',label:'Sat\n3/21',color:'#636363',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-22',label:'Sun\n3/22',color:'#6f6f6f',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-23',label:'Mon\n3/23',color:'#7b7b7b',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-24',label:'Tue\n3/24',color:'#878787',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-25',label:'Wed\n3/25',color:'#939393',bg:dayBandDark,textC:dayLabelColor},
+  {key:'2026-03-26',label:'Thu\n3/26',color:'#9f9f9f',bg:dayBandLight,textC:dayLabelColor},
+  {key:'2026-03-27',label:'Fri\n3/27',color:'#ababab',bg:dayBandDark,textC:dayLabelColor}
+];
+const dayMap = {};
+dayMeta.forEach(d => dayMap[d.key] = d);
+
+const points = raw.map(r => {
+  const d = new Date(r[0].replace(' ','T'));
+  return { x: d.getTime(), y: r[1], dt: d, day: r[0].slice(0,10) };
+});
+
+const minT = new Date('2026-03-14T00:00:00').getTime();
+const maxT = new Date('2026-03-28T00:00:00').getTime();
+const formatTempLabel = v => {
+  const n = Number(v);
+  return (Number.isInteger(n) ? n.toFixed(0) : n.toFixed(1)) + '°F';
+};
+const pointColors = points.map(p => p.y >= feverThreshold ? feverColor : normalColor);
+const tableRowsHtml = [...raw]
+  .sort((a, b) => a[0].localeCompare(b[0]))
+  .map(([stamp, temp], i) => {
+    const [date, time] = stamp.split(' ');
+    const rowBg = i % 2 ? tableRowAltBg : 'transparent';
+    return `
+      <tr style="background:${rowBg};">
+        <td style="padding:10px 12px; border-bottom:1px solid ${tableBorderC};">${date}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid ${tableBorderC};">${time}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid ${tableBorderC}; text-align:right;">${temp.toFixed(1)}&deg;F</td>
+      </tr>
+    `;
+  })
+  .join('');
+
+document.getElementById('tempTableWrap').innerHTML = `
+  <div style="border:1px solid ${tableBorderC}; border-radius:12px; overflow:hidden; background:${dk ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.92)'};">
+    <div style="padding:12px 14px; font:700 15px sans-serif; color:${txtC}; border-bottom:1px solid ${tableBorderC};">
+      Temperature Log
+    </div>
+    <div style="max-height:420px; overflow:auto;">
+      <table style="width:100%; border-collapse:collapse; font:14px sans-serif; color:${txtC};">
+        <thead>
+          <tr style="background:${tableHeadBg};">
+            <th style="padding:10px 12px; text-align:left; position:sticky; top:0; background:${tableHeadBg};">Date</th>
+            <th style="padding:10px 12px; text-align:left; position:sticky; top:0; background:${tableHeadBg};">Time</th>
+            <th style="padding:10px 12px; text-align:right; position:sticky; top:0; background:${tableHeadBg};">Temp</th>
+          </tr>
+        </thead>
+        <tbody>${tableRowsHtml}</tbody>
+      </table>
+    </div>
+  </div>
+`;
+
+const shadePlugin = {
+  id:'shade',
+  beforeDraw(chart) {
+    const {ctx, chartArea: a, scales} = chart;
+    if (!a) return;
+    ctx.save();
+    dayMeta.forEach(dm => {
+      const dayStart = new Date(dm.key+'T00:00:00').getTime();
+      const dayEnd = dayStart + 86400000;
+      let x1 = scales.x.getPixelForValue(Math.max(dayStart, minT));
+      let x2 = scales.x.getPixelForValue(Math.min(dayEnd, maxT));
+      x1 = Math.max(x1, a.left);
+      x2 = Math.min(x2, a.right);
+      if (x2 > x1) {
+        ctx.fillStyle = dm.bg;
+        ctx.fillRect(x1, a.top, x2 - x1, a.bottom - a.top);
+        const cx = (x1 + x2) / 2;
+        const [dayLine, dateLine] = dm.label.split('\n');
+        ctx.fillStyle = dm.textC;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const startY = a.top + 8;
+        ctx.font = '700 17px sans-serif';
+        ctx.fillText(dayLine, cx, startY);
+        ctx.font = '600 16px sans-serif';
+        ctx.fillText(dateLine, cx, startY + 18);
+      }
+    });
+    ctx.restore();
+  }
+};
+
+const feverPlugin = {
+  id:'fever',
+  beforeDraw(chart) {
+    const {ctx, chartArea: a, scales} = chart;
+    if (!a) return;
+    const yPx = scales.y.getPixelForValue(feverThreshold);
+    ctx.save();
+    ctx.strokeStyle = dk ? 'rgba(226,75,74,0.5)' : 'rgba(226,75,74,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(a.left, yPx); ctx.lineTo(a.right, yPx); ctx.stroke();
+    ctx.fillStyle = dk ? 'rgba(226,75,74,0.8)' : 'rgba(226,75,74,0.65)';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Fever ${feverThreshold.toFixed(1)}°F`, a.right - 4, yPx - 5);
+    ctx.restore();
+  }
+};
+
+new Chart(document.getElementById('tc'), {
+  type: 'line',
+  data: {
+    datasets: [{
+      data: points,
+      borderColor: normalColor,
+      segment: { borderColor: ctx2 => pointColors[ctx2.p1DataIndex] || normalColor },
+      pointBackgroundColor: pointColors,
+      pointBorderColor: pointColors,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      borderWidth: 1.5,
+      tension: 0.25,
+      fill: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: 0 } },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: items => {
+            const p = points[items[0].dataIndex];
+            return p.dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' ' + p.dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+          },
+          label: item => points[item.dataIndex].y.toFixed(1) + '°F'
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'linear',
+        min: minT,
+        max: maxT,
+        display: true,
+        grid: { display: false },
+        ticks: { display: false }
+      },
+      y: {
+        min: 97.5,
+        max: 103,
+        grid: { color: gridC },
+        ticks: {
+          color: txtC,
+          font: { size: 15 },
+          callback: v => formatTempLabel(v)
+        }
+      },
+      y1: {
+        position: 'right',
+        min: 97.5,
+        max: 103,
+        grid: { drawOnChartArea: false },
+        ticks: {
+          color: txtC,
+          font: { size: 15 },
+          callback: v => formatTempLabel(v)
+        }
+      }
+    }
+  },
+  plugins: [shadePlugin, feverPlugin]
+});
+</script>
